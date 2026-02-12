@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Planning">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <title>Power Week</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2211&auto=format&fit=crop') center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f0abfc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(129, 140, 248, 0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            line-height: 1.1;
+        }
+
+        .current-day {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .config-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .config-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.6);
+        }
+
+        .footer-space {
+            height: 100px;
+        }
+
+        .day-selector {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .day-btn {
+            padding: 12px 0;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .day-btn.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: white;
+            box-shadow: 
+                0 8px 24px rgba(99, 102, 241, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .section-title .icon {
+            font-size: 24px;
+        }
+
+        .activity-item, .exercise-item, .meal-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            border-left: 3px solid;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .activity-item {
+            border-left-color: rgba(99, 102, 241, 0.8);
+        }
+
+        .exercise-item {
+            border-left-color: rgba(240, 147, 251, 0.8);
+        }
+
+        .meal-item {
+            border-left-color: rgba(79, 172, 254, 0.8);
+        }
+
+        .activity-item:last-child,
+        .exercise-item:last-child,
+        .meal-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .content {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .exercise-details {
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .exercise-details strong {
+            color: rgba(255, 255, 255, 0.95);
+            display: block;
+            margin-top: 8px;
+        }
+
+        .exercise-details strong:first-child {
+            margin-top: 0;
+        }
+
+        .no-workout {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+        }
+
+        .diet-note {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(99, 102, 241, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 10px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 
+                0 4px 12px rgba(99, 102, 241, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Modal de configuración */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .config-section {
+            margin-bottom: 25px;
+        }
+
+        .config-section h3 {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .config-section textarea {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+        }
+
+        .info-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* Tabs para alternar entre editor visual y JSON */
+        .editor-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .editor-tab {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .editor-tab.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .editor-content {
+            display: none;
+        }
+
+        .editor-content.active {
+            display: block;
+        }
+
+        /* Editor visual */
+        .visual-editor {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .day-editor {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .day-editor h4 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(99, 102, 241, 0.6);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .add-activity-btn,
+        .remove-activity-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-activity-btn:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        .remove-activity-btn {
+            background: rgba(239, 68, 68, 0.2);
+            margin-left: 10px;
+        }
+
+        .remove-activity-btn:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        .activity-editor {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid rgba(99, 102, 241, 0.6);
+        }
+
+        .day-selector-config {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .day-selector-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .day-selector-btn.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .day-btn {
+                font-size: 11px;
+                padding: 10px 0;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .config-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Power Week</h1>
+            <div class="current-day" id="currentDay"></div>
+        </div>
+
+        <div class="day-selector">
+            <button class="day-btn" data-day="1">Lun</button>
+            <button class="day-btn" data-day="2">Mar</button>
+            <button class="day-btn" data-day="3">Mié</button>
+            <button class="day-btn" data-day="4">Jue</button>
+            <button class="day-btn" data-day="5">Vie</button>
+            <button class="day-btn" data-day="6">Sáb</button>
+            <button class="day-btn" data-day="0">Dom</button>
+        </div>
+
+        <div id="content"></div>
+
+        <div class="footer-space"></div>
+    </div>
+
+    <!-- Botón flotante de configuración -->
+    <button class="config-btn" onclick="openConfig()">⚙️</button>
+
+    <!-- Modal de configuración -->
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Configuración</h2>
+                <button class="close-btn" onclick="closeConfig()">✕</button>
+            </div>
+
+            <div class="editor-tabs">
+                <div class="editor-tab active" onclick="switchTab('visual')">📝 Editor Visual</div>
+                <div class="editor-tab" onclick="switchTab('json')">{ } Código JSON</div>
+            </div>
+
+            <!-- Editor Visual -->
+            <div class="editor-content active" id="visualEditor">
+                <div class="day-selector-config">
+                    <button class="day-selector-btn active" onclick="selectDayConfig(1)">Lun</button>
+                    <button class="day-selector-btn" onclick="selectDayConfig(2)">Mar</button>
+                    <button class="day-selector-btn" onclick="selectDayConfig(3)">Mié</button>
+                    <button class="day-selector-btn" onclick="selectDayConfig(4)">Jue</button>
+                    <button class="day-selector-btn" onclick="selectDayConfig(5)">Vie</button>
+                    <button class="day-selector-btn" onclick="selectDayConfig(6)">Sáb</button>
+                    <button class="day-selector-btn" onclick="selectDayConfig(0)">Dom</button>
+                </div>
+
+                <div class="visual-editor" id="dayEditorContainer"></div>
+            </div>
+
+            <!-- Editor JSON -->
+            <div class="editor-content" id="jsonEditor">
+                <div class="config-section">
+                    <p class="info-text">Edita directamente el código JSON (para usuarios avanzados)</p>
+                    <textarea id="configData"></textarea>
+                </div>
+            </div>
+
+            <button class="save-btn" onclick="saveConfig()">💾 Guardar Configuración</button>
+            
+            <p class="info-text" style="margin-top: 15px;">
+                Los datos se guardan localmente en tu navegador y persisten entre sesiones.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Datos por defecto (ejemplo genérico)
+        const defaultData = {
+            1: {
+                name: "Lunes",
+                activities: [
+                    { time: "Mañana", content: "Ejemplo de actividad matutina" },
+                    { time: "Tarde", content: "Ejemplo de actividad vespertina" }
+                ],
+                workout: null,
+                diet: {
+                    breakfast: "Configura tu desayuno",
+                    lunch: "Configura tu comida",
+                    dinner: "Configura tu cena",
+                    note: "Añade notas sobre tu dieta"
+                }
+            },
+            2: { name: "Martes", activities: [{ time: "Todo el día", content: "Configura tus actividades" }], workout: null, diet: { breakfast: "...", lunch: "...", dinner: "...", note: "..." }},
+            3: { name: "Miércoles", activities: [{ time: "Todo el día", content: "Configura tus actividades" }], workout: null, diet: { breakfast: "...", lunch: "...", dinner: "...", note: "..." }},
+            4: { name: "Jueves", activities: [{ time: "Todo el día", content: "Configura tus actividades" }], workout: null, diet: { breakfast: "...", lunch: "...", dinner: "...", note: "..." }},
+            5: { name: "Viernes", activities: [{ time: "Todo el día", content: "Configura tus actividades" }], workout: null, diet: { breakfast: "...", lunch: "...", dinner: "...", note: "..." }},
+            6: { name: "Sábado", activities: [{ time: "Todo el día", content: "Configura tus actividades" }], workout: null, diet: { breakfast: "...", lunch: "...", dinner: "...", note: "..." }},
+            0: { name: "Domingo", activities: [{ time: "Todo el día", content: "Configura tus actividades" }], workout: null, diet: { breakfast: "...", lunch: "...", dinner: "...", note: "..." }}
+        };
+
+        let planningData = defaultData;
+
+        // Cargar datos guardados
+        function loadSavedData() {
+            const saved = localStorage.getItem('planningData');
+            if (saved) {
+                try {
+                    planningData = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error al cargar datos:', e);
+                }
+            }
+        }
+
+        let currentEditingDay = 1;
+        let currentTab = 'visual';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.editor-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'visual') {
+                document.querySelector('.editor-tab:first-child').classList.add('active');
+                document.getElementById('visualEditor').classList.add('active');
+            } else {
+                document.querySelector('.editor-tab:last-child').classList.add('active');
+                document.getElementById('jsonEditor').classList.add('active');
+                document.getElementById('configData').value = JSON.stringify(planningData, null, 2);
+            }
+        }
+
+        function selectDayConfig(day) {
+            currentEditingDay = day;
+            document.querySelectorAll('.day-selector-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderDayEditor(day);
+        }
+
+        function renderDayEditor(dayNum) {
+            const data = planningData[dayNum];
+            const container = document.getElementById('dayEditorContainer');
+            
+            let html = `
+                <div class="day-editor">
+                    <h4>${data.name}</h4>
+                    
+                    <h5 style="color: rgba(255,255,255,0.9); margin: 20px 0 10px 0;">📅 Actividades</h5>
+                    <div id="activities-${dayNum}">
+            `;
+            
+            data.activities.forEach((activity, index) => {
+                html += `
+                    <div class="activity-editor">
+                        <div class="form-group">
+                            <label>Hora / Período</label>
+                            <input type="text" value="${activity.time}" onchange="updateActivity(${dayNum}, ${index}, 'time', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <input type="text" value="${activity.content}" onchange="updateActivity(${dayNum}, ${index}, 'content', this.value)">
+                        </div>
+                        <button class="remove-activity-btn" onclick="removeActivity(${dayNum}, ${index})">🗑️ Eliminar</button>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <button class="add-activity-btn" onclick="addActivity(${dayNum})">➕ Añadir Actividad</button>
+                    
+                    <h5 style="color: rgba(255,255,255,0.9); margin: 20px 0 10px 0;">🍽️ Alimentación</h5>
+                    <div class="form-group">
+                        <label>Desayuno</label>
+                        <input type="text" value="${data.diet.breakfast}" onchange="updateDiet(${dayNum}, 'breakfast', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Comida</label>
+                        <input type="text" value="${data.diet.lunch}" onchange="updateDiet(${dayNum}, 'lunch', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Cena</label>
+                        <input type="text" value="${data.diet.dinner}" onchange="updateDiet(${dayNum}, 'dinner', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Nota del día</label>
+                        <textarea onchange="updateDiet(${dayNum}, 'note', this.value)">${data.diet.note}</textarea>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function updateActivity(dayNum, index, field, value) {
+            planningData[dayNum].activities[index][field] = value;
+        }
+
+        function addActivity(dayNum) {
+            planningData[dayNum].activities.push({ time: "Nueva hora", content: "Nueva actividad" });
+            renderDayEditor(dayNum);
+        }
+
+        function removeActivity(dayNum, index) {
+            planningData[dayNum].activities.splice(index, 1);
+            renderDayEditor(dayNum);
+        }
+
+        function updateDiet(dayNum, field, value) {
+            planningData[dayNum].diet[field] = value;
+        }
+
+        function openConfig() {
+            document.getElementById('configModal').classList.add('active');
+            document.getElementById('configData').value = JSON.stringify(planningData, null, 2);
+            switchTab('visual');
+            renderDayEditor(currentEditingDay);
+        }
+
+        function closeConfig() {
+            document.getElementById('configModal').classList.remove('active');
+        }
+
+        function saveConfig() {
+            try {
+                let newData;
+                if (currentTab === 'json') {
+                    newData = JSON.parse(document.getElementById('configData').value);
+                } else {
+                    newData = planningData;
+                }
+                planningData = newData;
+                localStorage.setItem('planningData', JSON.stringify(newData));
+                closeConfig();
+                updateUI(new Date().getDay());
+                alert('✅ Configuración guardada correctamente');
+            } catch (e) {
+                alert('❌ Error: El formato JSON no es válido\n\n' + e.message);
+            }
+        }
+
+        function getDayName(dayNum) {
+            const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            return days[dayNum];
+        }
+
+        function renderDay(dayNum) {
+            const data = planningData[dayNum];
+            const content = document.getElementById('content');
+            
+            let html = '';
+
+            // Sección de Actividades
+            html += `
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon">📅</span>
+                        Actividades
+                    </div>
+            `;
+            
+            data.activities.forEach(activity => {
+                html += `
+                    <div class="activity-item">
+                        <div class="time">${activity.time}</div>
+                        <div class="content">${activity.content}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+
+            // Sección de Ejercicio
+            html += `
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon">💪</span>
+                        Ejercicio
+                    </div>
+            `;
+
+            if (data.workout) {
+                html += `
+                    <div class="exercise-item">
+                        <div class="time">${data.workout.time}</div>
+                        <div class="content">${data.workout.name}</div>
+                        <div class="exercise-details">
+                            <strong>Calentamiento:</strong> ${data.workout.warmup}
+                            <strong>Ejercicios:</strong>
+                `;
+                
+                data.workout.exercises.forEach((ex, i) => {
+                    html += `<br>${i + 1}. ${ex.name} - ${ex.reps}<br><em>${ex.notes}</em>`;
+                });
+                
+                html += `
+                            <strong>Estructura:</strong> ${data.workout.rounds}
+                            <strong>Vuelta de calma:</strong> ${data.workout.cooldown}
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="no-workout">
+                        🌙 Día de descanso
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            // Sección de Dieta
+            html += `
+                <div class="section">
+                    <div class="section-title">
+                        <span class="icon">🍽️</span>
+                        Alimentación
+                    </div>
+                    <div class="meal-item">
+                        <div class="time">Desayuno</div>
+                        <div class="content">${data.diet.breakfast}</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="time">Comida</div>
+                        <div class="content">${data.diet.lunch}</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="time">Cena</div>
+                        <div class="content">${data.diet.dinner}</div>
+                    </div>
+                    <div class="diet-note">
+                        💡 ${data.diet.note}
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        function updateUI(dayNum) {
+            document.getElementById('currentDay').textContent = getDayName(dayNum);
+
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.day) === dayNum) {
+                    btn.classList.add('active');
+                }
+            });
+
+            renderDay(dayNum);
+        }
+
+        // Event listeners
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dayNum = parseInt(btn.dataset.day);
+                updateUI(dayNum);
+            });
+        });
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeConfig();
+        });
+
+        // Initialize
+        loadSavedData();
+        const today = new Date().getDay();
+        updateUI(today);
+    </script>
+</body>
+</html>
